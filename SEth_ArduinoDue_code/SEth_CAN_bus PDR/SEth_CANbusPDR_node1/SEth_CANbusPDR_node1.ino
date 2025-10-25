@@ -8,16 +8,22 @@
 #define buttonPin 53
 volatile bool buttonPressed = false;         // variable for readin
 
-const uint32_t BitRate5khz = 80;
-const uint8_t BitRate1khz = 1;
+
+const uint32_t BitRate12_5khz = 80;
 
 /* Generate the PWM (42 MHz) */
 const uint8_t Period42Mhz = 2;
 const uint8_t Duty42Mhz = 1;
 
-byte Address_Node0[8] = { 0, 0, 1, 0, 0, 1, 0, 1 };
+byte Address_Node0[8] = {0, 0, 1, 0, 0, 1, 0, 1;
+//byte Address_Node1[8] = { 0, 0, 1, 0, 0, 1, 0, 1 };
+//byte Address_Node2[8] = { 0, 0, 1, 0, 1, 1, 0, 1 };
+//byte Address_Node3[8] = { 0, 1, 0, 0, 1, 1, 0, 1 };
+//byte Address_Node4[8] = { 0, 1, 1, 0, 1, 0, 1, 1 };
+//byte Address_Node5[8] = { 0, 0, 1, 1, 0, 0, 1, 1 };
 volatile boolean state;
 
+volatile uint32_t ReceivedNumber =0; 
 
 inline boolean digitalWriteDirect(int pin, boolean val) {
   if (val) g_APinDescription[pin].pPort -> PIO_SODR = g_APinDescription[pin].ulPin;
@@ -32,17 +38,12 @@ inline int digitalReadDirect(int pin) {
 
 
 /*These are for Rx*/
-// const  int Original_T=100;
-// const  int Tolerance_T=70;
-// const  int TimeOut = Original_T + Tolerance_T;
-// //const  int PeriodDiff01 = Original_T - Tolerance_T;
-// const  int PeriodDiff = 70;
-
 const  int Original_T=80;
 const  int Tolerance_T=90;
 const  int TimeOut = Original_T + Tolerance_T;
 //const  int PeriodDiff01 = Original_T - Tolerance_T;
 const  int PeriodDiff = 50;
+
 
 const int packetsize = 56;
 byte payload[packetsize];
@@ -205,12 +206,8 @@ void Send_bytes(byte byteload0, byte byteload1, byte byteload2, byte byteload3, 
   state = Send_load(Dataload2Arr, state);
   //Serial.println();
   state = Send_load(Dataload3Arr, state);
-  //Serial.println();
   state = Send_load(Dataload4Arr, state);
-  //Serial.println();
   state = Send_load(Dataload5Arr, state);
-  //Serial.println();
-  //Send_syncEnd(4);
   state = Send_load(Dataload6Arr, state);
   digitalWriteDirect(CaINOPWMSW, LOW);
 }
@@ -257,90 +254,53 @@ void Seek_Address8bits()
 }
 
 
-byte Read_oneBit(long *startTime, boolean *initialState)
+///*The following is for the receiving code */
+byte Read_oneBit(long *start_Time, boolean *init_state)
 {
-    long timeElapsed;
-    long currentTime;
-    boolean currentRxState = *initialState;
+   long Time_delta;
+   long new_time;
+   long last_edge_time = *start_Time;
+   boolean Rxstate = *init_state;
 
-    while (true)
+do{
+    while (Rxstate == digitalReadDirect(CaINRxGPIO)) {}
+    new_time = micros();
+
+    Time_delta = new_time-*start_Time;
+    
+    if (Time_delta >= TimeOut)
     {
-        // Wait until the Rx state changes
-        while (currentRxState == digitalReadDirect(CaINRxGPIO)) {}
-
-        // Record the new time
-        currentTime = micros();
-        timeElapsed = currentTime - *startTime;
-
-        // Check for timeout
-        if (timeElapsed >= TimeOut)
-        {
-            *startTime = currentTime;
-            return 3;
-        }
-
-        // Toggle the state
-        currentRxState = !currentRxState;
-
-        // Check if the elapsed time meets the threshold
-        if (timeElapsed >= PeriodDiff)
-        {
-            *startTime = currentTime;
-            *initialState = currentRxState;
-            return (byte)currentRxState;
-        }
+      //Serial.println(Time_delta);
+      *start_Time = new_time;
+      return 3;
     }
+    else
+    {
+       Rxstate = !Rxstate;
+    }
+    
+    if((Time_delta >= PeriodDiff))
+    {
+      *start_Time = new_time;
+      *init_state = Rxstate;
+      return (byte)Rxstate;
+    }
+    else {
+      last_edge_time = new_time;
+    }
+  }
+  while (true);
+/****************************/
 }
 
 
-/////*The following is for the receiving code */
-//byte Read_oneBit(long *start_Time, boolean *init_state)
-//{
-//   long Time_delta;
-//   long new_time;
-//   long last_edge_time = *start_Time;
-//   boolean Rxstate = *init_state;
-//
-//do{
-//    while (Rxstate == digitalReadDirect(CaINRxGPIO)) {}
-//    new_time = micros();
-//
-//    Time_delta = new_time-*start_Time;
-//    
-//    if (Time_delta >= TimeOut)
-//    {
-//      //Serial.println(Time_delta);
-//      *start_Time = new_time;
-//      return 3;
-//    }
-//    else
-//    {
-//       Rxstate = !Rxstate;
-//    }
-//    
-//    if((Time_delta >= PeriodDiff))
-//    {
-//      *start_Time = new_time;
-//      *init_state = Rxstate;
-//      return (byte)Rxstate;
-//    }
-//    else {
-//      last_edge_time = new_time;
-//    }
-//  }
-//  while (true);
-///****************************/
-//}
-
-
-#define HighDurationThreshold 40    // High level threshold (microseconds)
-#define LowDurationThreshold 60     // Low level threshold (microseconds)
-#define TransitionTimeout 120       // Transition detection timeout (microseconds)
+#define HighDurationThreshold 50    // High level threshold (microseconds)
+#define LowDurationThreshold 80     // Low level threshold (microseconds)
+#define TransitionTimeout 150       // Transition detection timeout (microseconds)
 boolean rxBUSY = true;
 boolean rxIdle = false;
 
 boolean checkRxStatus() {
-  digitalWriteDirect(CaINTxRxSwitch, HIGH);
   long startTime = micros();
   boolean currentState = digitalReadDirect(CaINRxGPIO);
 
@@ -374,35 +334,7 @@ boolean checkRxStatus() {
 }
 
 
-// #define TIMEOUT_IDLE 170
-// #define THRESHOLD_BUSY_1 50
-// #define THRESHOLD_BUSY_2 80
-// #define RX_BUSY true
-// #define RX_IDLE false
 
-// boolean checkRxStatus() {
-//   long startTime = micros();  // Record the start time
-//   boolean initialState = digitalReadDirect(CaINRxGPIO);  // Read the initial state
-//   long elapsedTime;
-//   boolean currentRxState;
-
-//   while (true) {
-//     currentRxState = digitalReadDirect(CaINRxGPIO);  // Read the current state
-    
-//     if (currentRxState != initialState) {  // State has changed
-      
-//       elapsedTime = micros() - startTime;  // Calculate elapsed time
-//       if (elapsedTime < THRESHOLD_BUSY_2) {
-//         return RX_BUSY;  // Busy: state change time is less than 50 microseconds
-//       } 
-//       initialState = currentRxState;
-//       startTime = micros();
-//     }
-//     if ((micros() - startTime) > TIMEOUT_IDLE) {
-//       return RX_IDLE;  // Idle: no state change for more than 120 microseconds
-//     }
-//   }
-// }
 
 /*
  *   digitalWriteDirect(CaINOPWMSW, LOW);  //Enable the PWM 
@@ -438,6 +370,8 @@ void setup() {
 
 void loop() {
    Seek_Address8bits();
+//   ReceivedNumber++;
+//   Serial.println(ReceivedNumber);
    Read_bytes(payload);
 }
 
@@ -445,16 +379,17 @@ void loop() {
 // Interrupt service routine for the button press
 void buttonISR() {
       digitalWriteDirect(CaINTxRxSwitch, LOW);
-      Send_preamble(10);
-      //digitalWriteDirect(CaINOPWMSW, LOW); 
+      Send_preamble(8);
+//     digitalWriteDirect(CaINOPWMSW, LOW); 
+      digitalWriteDirect(CaINTxRxSwitch, HIGH);
       if (checkRxStatus() == rxBUSY) {
-         //digitalWriteDirect(CaINOPWMSW, LOW); 
+        digitalWriteDirect(CaINOPWMSW, LOW); 
       } 
       else {
         digitalWriteDirect(CaINTxRxSwitch, LOW);
-        Send_bytes('0', 'N', 'O' , 'D', 'E', '0','0'); 
+        Send_bytes('1', 'N', 'O' , 'D', 'E', '1','1');
         digitalWriteDirect(CaINTxRxSwitch, HIGH);
-        digitalWriteDirect(CaINOPWMSW, LOW);
+        digitalWriteDirect(CaINOPWMSW, LOW); 
       }
 }
 

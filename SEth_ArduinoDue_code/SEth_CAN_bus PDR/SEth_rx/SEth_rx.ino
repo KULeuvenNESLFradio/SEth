@@ -61,28 +61,47 @@ inline boolean digitalWriteDirect(int pin, boolean val){
 
 void Read_bytes(byte load[])
 {
-  CaINBufferSize =0; 
-  byte testAscii; 
   boolean init_state = digitalReadDirect(CaINRxGPIO);
   long Address8bits_time = micros();
 
-  for (int i=0;i<packetsize;i++)
-  {
-    load[i]= Read_oneBit(&Address8bits_time, &init_state);
-//    Serial.print(load[i]);
-    // *************************** //
-    // The following code just for 20231016 demo test //
-    CaINBuffer[CaINBufferSize] = load[i];
-    CaINBufferSize++;
-    if(CaINBufferSize==8){
-      testAscii = array_to_ascii(CaINBuffer);
-      Serial.print((char)testAscii);
-      Serial.println();
-      CaINBufferSize=0;
-    }
-    // *************************** //
+  for (int i = 0; i < packetsize; i++) {
+    load[i] = Read_oneBit(&Address8bits_time, &init_state);
+    Serial.print(load[i]);  // 输出 bit (0 或 1)
   }
+
+  Serial.println();  // 每个 payload 结束换行
+  Serial.flush();
 }
+// void Read_bytes(byte load[])
+// {
+//   CaINBufferSize =0; 
+//   byte testAscii; 
+//   boolean init_state = digitalReadDirect(CaINRxGPIO);
+//   long Address8bits_time = micros();
+//   //   for (int i = 0; i < packetsize; i++) {
+//   //   load[i] = Read_oneBit(&Address8bits_time, &init_state);
+//   //   if (load[i] == 0 || load[i] == 1) Serial.print(load[i]);
+//   // }
+//   // Serial.println(); // 每个payload结束换行
+//   // Serial.flush();
+
+//   for (int i=0;i<packetsize;i++)
+//   {
+//     load[i]= Read_oneBit(&Address8bits_time, &init_state);
+// //    Serial.print(load[i]);
+//     // *************************** //
+//     // The following code just for 20231016 demo test //
+//     CaINBuffer[CaINBufferSize] = load[i];
+//     CaINBufferSize++;
+//     if(CaINBufferSize==8){
+//       testAscii = array_to_ascii(CaINBuffer);
+//       Serial.print((char)testAscii);
+//       Serial.println();
+//       CaINBufferSize=0;
+//     }
+//     // *************************** //
+//   }
+// }
 
 void Seek_Address8bits()
 /*seek for the Address8bits signal*//*this is a blocking funtion*/
@@ -159,6 +178,7 @@ void setup() {
   pinMode(CaINRxGPIO,INPUT); 
   pinMode(CaINTxRxSwitch,OUTPUT); 
   digitalWriteDirect(CaINTxRxSwitch, HIGH);
+  
 }
   
 void loop() {
@@ -168,8 +188,9 @@ void loop() {
       Seek_Address8bits();
       //Serial.println("Node Address OK");
       Read_bytes(payload); 
-      Address_OK_Count++;
-      Serial.print("Node Address OK #");
-      Serial.println(Address_OK_Count);
+      // Address_OK_Count++;
+      // Serial.print("Node Address OK #");
+      // Serial.println(Address_OK_Count);
 //    }
 }
+
