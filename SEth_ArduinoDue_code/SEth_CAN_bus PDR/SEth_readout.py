@@ -4,7 +4,7 @@ import time
 import os
 from datetime import datetime
 # === Serial Port Configuration ===
-PORT = '/dev/cu.usbmodem11301'   # Change to your Arduino port
+PORT = '/dev/cu.usbmodem112301'   # Change to your Arduino port
 BAUDRATE = 250000
 TIMEOUT = 1                      # Serial read timeout (seconds)
 DURATION = 300                   # Total capture duration (seconds)
