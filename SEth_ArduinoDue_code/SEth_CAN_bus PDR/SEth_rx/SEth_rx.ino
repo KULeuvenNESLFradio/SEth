@@ -1,6 +1,6 @@
 #define CaINRxGPIO  6 
 #define CaINTxRxSwitch 8
-//#define CaINTxRxSwitch 4
+// #define CaINTxRxSwitch 4
 // byte Address8bits[8] = {0, 0, 1, 0, 0, 1, 0, 1 };
 byte Address8bits[8] =  { 0, 0, 1, 0, 0, 1, 0, 1 };
 

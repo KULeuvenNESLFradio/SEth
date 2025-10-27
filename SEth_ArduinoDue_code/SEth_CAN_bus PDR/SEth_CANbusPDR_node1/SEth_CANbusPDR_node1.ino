@@ -15,7 +15,7 @@ const uint32_t BitRate12_5khz = 80;
 const uint8_t Period42Mhz = 2;
 const uint8_t Duty42Mhz = 1;
 
-byte Address_Node0[8] = {0, 0, 1, 0, 0, 1, 0, 1;
+byte Address_Node0[8] = {0, 0, 1, 0, 0, 1, 0, 1};
 //byte Address_Node1[8] = { 0, 0, 1, 0, 0, 1, 0, 1 };
 //byte Address_Node2[8] = { 0, 0, 1, 0, 1, 1, 0, 1 };
 //byte Address_Node3[8] = { 0, 1, 0, 0, 1, 1, 0, 1 };
@@ -116,20 +116,21 @@ void Send_sync(int cycles) {
   //sending a sync signal
   for (byte i = 0; i < cycles; i++) {
     digitalWriteDirect(CaINOPWMSW, HIGH);
-    delayMicroseconds(BitRate5khz);
+    delayMicroseconds(BitRate12_5khz);
     digitalWriteDirect(CaINOPWMSW, LOW);
-    delayMicroseconds(BitRate5khz);
+    delayMicroseconds(BitRate12_5khz);
   }
   digitalWriteDirect(CaINOPWMSW, HIGH);
 }
+
 
 ///*send 32 HIGH LOW edges to synchronize with the receptor*/
 void Send_preamble(int cycles) {
   for (byte i = 0; i < cycles; i++) {
     digitalWriteDirect(CaINOPWMSW, HIGH);
-    delayMicroseconds(BitRate5khz/2);
+    delayMicroseconds(BitRate12_5khz/2);
     digitalWriteDirect(CaINOPWMSW, LOW);
-    delayMicroseconds(BitRate5khz/2);
+    delayMicroseconds(BitRate12_5khz/2);
   }
   digitalWriteDirect(CaINOPWMSW, LOW);
 }
@@ -142,14 +143,14 @@ boolean Send_load(byte start[], boolean state) {
     if (start[i] == 1) {
       if (state == LOW)
       {
-        delayMicroseconds(BitRate5khz);
+        delayMicroseconds(BitRate12_5khz);
         state = digitalWriteDirect(CaINOPWMSW, HIGH);
       }
       else  //state==HIGH
       {
-        delayMicroseconds(BitRate5khz / 2);
+        delayMicroseconds(BitRate12_5khz / 2);
         state = digitalWriteDirect(CaINOPWMSW, LOW);
-        delayMicroseconds(BitRate5khz / 2);
+        delayMicroseconds(BitRate12_5khz / 2);
         state = digitalWriteDirect(CaINOPWMSW, HIGH);
       }
     }
@@ -157,14 +158,14 @@ boolean Send_load(byte start[], boolean state) {
     {
       if (state == LOW)
       {
-        delayMicroseconds(BitRate5khz / 2);
+        delayMicroseconds(BitRate12_5khz / 2);
         state = digitalWriteDirect(CaINOPWMSW, HIGH);
-        delayMicroseconds(BitRate5khz / 2);
+        delayMicroseconds(BitRate12_5khz / 2);
         state = digitalWriteDirect(CaINOPWMSW, LOW);
       }
       else  //state==HIGH
       {
-        delayMicroseconds(BitRate5khz);
+        delayMicroseconds(BitRate12_5khz);
         state = digitalWriteDirect(CaINOPWMSW, LOW);
       }
     }
@@ -294,9 +295,9 @@ do{
 }
 
 
-#define HighDurationThreshold 50    // High level threshold (microseconds)
-#define LowDurationThreshold 80     // Low level threshold (microseconds)
-#define TransitionTimeout 150       // Transition detection timeout (microseconds)
+#define HighDurationThreshold 40    // High level threshold (microseconds)
+#define LowDurationThreshold 60     // Low level threshold (microseconds)
+#define TransitionTimeout 120       // Transition detection timeout (microseconds)
 boolean rxBUSY = true;
 boolean rxIdle = false;
 
@@ -348,7 +349,7 @@ boolean checkRxStatus() {
 */
 void setup() {
   Serial.begin(250000);
-  Serial.println("Welcome to BodyCaIN");
+  Serial.println("Welcome to SEth, I am SEth node1");
   pinMode(CaINRxGPIO,INPUT); 
   pinMode(CaINTxRxSwitch,OUTPUT); 
   pinMode(CaINOPWMSW, OUTPUT);
@@ -379,7 +380,7 @@ void loop() {
 // Interrupt service routine for the button press
 void buttonISR() {
       digitalWriteDirect(CaINTxRxSwitch, LOW);
-      Send_preamble(8);
+      Send_preamble(9);
 //     digitalWriteDirect(CaINOPWMSW, LOW); 
       digitalWriteDirect(CaINTxRxSwitch, HIGH);
       if (checkRxStatus() == rxBUSY) {
@@ -392,7 +393,6 @@ void buttonISR() {
         digitalWriteDirect(CaINOPWMSW, LOW); 
       }
 }
-
 
 //  Send_bytes('1', 'B', 'b' , 'F', 'f', 'b','1');
 //  delay(1000);

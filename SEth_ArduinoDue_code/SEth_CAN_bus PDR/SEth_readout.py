@@ -7,13 +7,13 @@ from datetime import datetime
 PORT = '/dev/cu.usbmodem11301'   # Change to your Arduino port
 BAUDRATE = 250000
 TIMEOUT = 1                      # Serial read timeout (seconds)
-DURATION = 100                   # Total capture duration (seconds)
+DURATION = 300                   # Total capture duration (seconds)
 PAYLOAD_BITS = 56                # Payload length in bits
 TIMEOUT_GAP = 2.0                # If no data for >2s, log TIMEOUT
 
 # === Create output folder with timestamp ===
 timestamp_str = datetime.now().strftime('%Y%m%d_%H%M%S')
-output_dir = f"CaIN_rx_{timestamp_str}"
+output_dir = f"SEth_CAN-bus-PDF_rx_{timestamp_str}"
 os.makedirs(output_dir, exist_ok=True)
 
 CSV_FILE = os.path.join(output_dir, "data.csv")
